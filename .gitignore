@@ -1,0 +1,24 @@
+# Node
+node_modules/
+pnpm-lock.yaml
+
+# Playwright
+test-results/
+playwright-report/
+.cache/
+
+# Nix
+result
+result-*
+.direnv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
