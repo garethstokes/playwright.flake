@@ -112,7 +112,7 @@
         # Exported shell hook for composition
         playwrightShellHook = ''
           # Configure Playwright to use Nix-provided browsers (v1.58.2)
-          export PLAYWRIGHT_BROWSERS_PATH=${playwrightPkgs.playwright-driver}
+          export PLAYWRIGHT_BROWSERS_PATH=${playwrightPkgs.playwright-driver.browsers}
           export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
           export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 
@@ -169,7 +169,11 @@
         # Export composable parts for other flakes
         lib = {
           # Function to create a Playwright-enabled shell
-          mkPlaywrightShell = { additionalPackages ? [], additionalShellHook ? "" }:
+          mkPlaywrightShell =
+            {
+              additionalPackages ? [ ],
+              additionalShellHook ? "",
+            }:
             pkgs.mkShell {
               packages = playwrightPackages ++ additionalPackages;
               shellHook = playwrightShellHook + "\n" + additionalShellHook;
@@ -182,7 +186,8 @@
         # Backwards compatibility
         devShell = self.devShells.${system}.default;
       }
-    ) // {
+    )
+    // {
       # Flake template for easy project initialization
       templates.default = {
         path = ./.;
