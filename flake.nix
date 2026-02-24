@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # Pin to specific Playwright version for reproducibility
+    playwright.url = "github:pietdevries94/playwright-web-flake/1.58.2";
   };
 
   outputs =
@@ -11,6 +13,7 @@
       self,
       nixpkgs,
       flake-utils,
+      playwright,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -97,16 +100,19 @@
           esac
         '';
 
+        # Playwright packages from the dedicated flake (version 1.58.2)
+        playwrightPkgs = playwright.packages.${system};
+
         # Exported packages for composition
-        playwrightPackages = with pkgs; [
-          playwright-driver.browsers
+        playwrightPackages = [
+          playwrightPkgs.playwright-driver
           playwrightScripts
         ];
 
         # Exported shell hook for composition
         playwrightShellHook = ''
-          # Configure Playwright to use Nix-provided browsers
-          export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+          # Configure Playwright to use Nix-provided browsers (v1.58.2)
+          export PLAYWRIGHT_BROWSERS_PATH=${playwrightPkgs.playwright-driver}
           export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
           export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 
@@ -120,17 +126,17 @@
         devShells.default = pkgs.mkShell {
           name = "playwright-dev";
 
-          packages = with pkgs; [
+          packages = [
             # Node.js and package managers
-            nodejs_22
-            nodePackages.pnpm
+            pkgs.nodejs_22
+            pkgs.nodePackages.pnpm
 
             # Language servers for editor support
-            vscode-langservers-extracted
-            tailwindcss-language-server
+            pkgs.vscode-langservers-extracted
+            pkgs.tailwindcss-language-server
 
-            # Playwright browsers (Chromium, Firefox, WebKit)
-            playwright-driver.browsers
+            # Playwright browsers (Chromium, Firefox, WebKit) - v1.58.2
+            playwrightPkgs.playwright-driver
 
             # Helper scripts
             playwrightScripts
